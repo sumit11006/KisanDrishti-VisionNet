@@ -1,0 +1,83 @@
+steps:
+  # 1. Run Python tests (pytest)
+  - name: 'python:3.12-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install -r backend/requirements.txt pytest
+        python -m pytest backend/tests/
+    id: 'run-tests'
+
+  # 2. Run linting (ruff)
+  - name: 'python:3.12-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install ruff
+        ruff check backend/
+    id: 'run-lint'
+    waitFor: ['run-tests']
+
+  # 3. Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}', 'backend/']
+    id: 'build-image'
+    waitFor: ['run-lint']
+
+  # 4. Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}']
+    id: 'push-image'
+    waitFor: ['build-image']
+
+  # 5. Deploy to Cloud Run (staging)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}-staging'
+      - '--image'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}'
+      - '--region'
+      - '${_REGION}'
+      - '--allow-unauthenticated'
+    id: 'deploy-staging'
+    waitFor: ['push-image']
+
+  # 6. Run integration tests against staging
+  - name: 'python:3.12-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install requests pytest
+        pytest infrastructure/tests/integration/ --base-url=$(gcloud run services describe ${_SERVICE_NAME}-staging --region=${_REGION} --format='value(status.url)')
+    id: 'integration-tests'
+    waitFor: ['deploy-staging']
+
+  # 7. Deploy to Cloud Run (production)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}-prod'
+      - '--image'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}'
+      - '--region'
+      - '${_REGION}'
+      - '--allow-unauthenticated'
+    id: 'deploy-prod'
+    waitFor: ['integration-tests']
+
+substitutions:
+  _REGION: 'us-central1'
+  _REPO_NAME: 'krishi-vision-repo'
+  _SERVICE_NAME: 'krishi-vision-backend'
+
+timeout: '1800s' # 30 minutes
+options:
+  machineType: 'E2_HIGHCPU_8'
