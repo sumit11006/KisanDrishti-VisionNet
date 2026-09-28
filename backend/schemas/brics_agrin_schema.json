@@ -1,0 +1,84 @@
+{
+  "@context": {
+    "@vocab": "https://agrin.brics.org/schema/v1/",
+    "schema": "https://schema.org/",
+    "geo": "http://www.opengis.net/ont/geosparql#",
+    "agri": "https://agrin.brics.org/ontology/",
+    "country": "agri:country",
+    "institution": "agri:institution"
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BRICS AgriN Interoperable Data Exchange Schema",
+  "description": "JSON-LD compatible schema for agricultural data exchange across BRICS nations.",
+  "type": "object",
+  "properties": {
+    "data_sovereignty": {
+      "type": "object",
+      "description": "Metadata regarding data ownership and sharing permissions.",
+      "properties": {
+        "origin_country": { "type": "string", "description": "The country of origin for the data." },
+        "institution": { "type": "string", "description": "The institution providing the data." },
+        "sharing_level": { "type": "string", "enum": ["public", "consortium", "private"], "description": "The permitted level of sharing." },
+        "consent_type": { "type": "string", "description": "The type of consent obtained." }
+      },
+      "required": ["origin_country", "sharing_level"]
+    },
+    "AgronomicObservation": {
+      "type": "object",
+      "description": "Records related to pests, diseases, or soil observations.",
+      "properties": {
+        "observation_type": { "type": "string", "enum": ["pest", "disease", "soil"] },
+        "date_observed": { "type": "string", "format": "date-time" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" }
+          },
+          "required": ["latitude", "longitude"]
+        },
+        "details": { "type": "string" }
+      },
+      "required": ["observation_type", "date_observed", "location"]
+    },
+    "SoilHealthBaseline": {
+      "type": "object",
+      "description": "Baseline measurements for soil health.",
+      "properties": {
+        "ph_level": { "type": "number", "description": "Soil pH level." },
+        "organic_carbon_percent": { "type": "number", "description": "Percentage of organic carbon in soil." },
+        "nitrogen_level": { "type": "number", "description": "Nitrogen level in mg/kg." },
+        "phosphorus_level": { "type": "number", "description": "Phosphorus level in mg/kg." },
+        "potassium_level": { "type": "number", "description": "Potassium level in mg/kg." }
+      }
+    },
+    "CropVarietyProfile": {
+      "type": "object",
+      "description": "Profile of a specific crop variety.",
+      "properties": {
+        "variety_name": { "type": "string" },
+        "species": { "type": "string" },
+        "drought_tolerance": { "type": "string", "enum": ["low", "medium", "high"] },
+        "pest_resistance": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "RegenerativePracticeRecord": {
+      "type": "object",
+      "description": "Records of regenerative farming practices implemented.",
+      "properties": {
+        "practice_name": { "type": "string" },
+        "implementation_date": { "type": "string", "format": "date" },
+        "estimated_impact": { "type": "string" }
+      }
+    },
+    "ClimateRiskAssessment": {
+      "type": "object",
+      "description": "Assessment of climate risks for agricultural plots.",
+      "properties": {
+        "risk_type": { "type": "string" },
+        "probability_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "mitigation_strategy": { "type": "string" }
+      }
+    }
+  }
+}
