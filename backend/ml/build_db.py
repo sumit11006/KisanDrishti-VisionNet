@@ -1,0 +1,395 @@
+"""
+Build the ICAR-aligned Agronomic Disease Knowledge Database.
+Run this once to generate disease_db.json in backend/ml/
+"""
+import json
+import pathlib
+
+DB = {
+    "model_info": {
+        "name": "Kisan Drishti MobileNetV3 Disease Knowledge Engine",
+        "version": "1.0.0",
+        "total_classes": 38,
+        "source": "ICAR / PlantVillage / FAO Agronomy Guidelines",
+        "crops_covered": 14
+    },
+    "classes": {
+        "Apple___Apple_scab": {
+            "display_name": "Apple Scab",
+            "pathogen_name": "Venturia inaequalis",
+            "pathogen_type": "Fungal",
+            "severity": "MEDIUM",
+            "crop": "Apple",
+            "estimated_yield_impact_percent": 20,
+            "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0101",
+            "symptoms": ["Olive-green to brown velvety lesions on upper leaf", "Dark scab-like spots on fruit skin", "Premature defoliation in severe cases", "Distorted or cracked fruit surface"],
+            "environmental_factors": ["Cool and wet spring weather (10-24 C)", "High relative humidity (>70%)", "Extended leaf wetness periods"],
+            "organic_treatment": "Apply sulfur-based fungicide (Wettable Sulfur 80% WP at 3g/L). Use lime-sulfur spray during dormant season. Remove and destroy fallen infected leaves. Apply neem oil (3%) fortnightly. Prune for better air circulation.",
+            "chemical_treatment": "Apply Captan 50% WP at 2g/L or Carbendazim 50% WP at 1g/L. Alternate with Mancozeb 75% WP at 2.5g/L every 10-14 days. Begin at green tip stage.",
+            "similar_outbreaks_globally": ["China: Apple scab outbreak - Shaanxi province (2023)", "Russia: Apple scab - Krasnodar region (2022)"]
+        },
+        "Apple___Black_rot": {
+            "display_name": "Apple Black Rot",
+            "pathogen_name": "Botryosphaeria obtusa",
+            "pathogen_type": "Fungal",
+            "severity": "HIGH",
+            "crop": "Apple",
+            "estimated_yield_impact_percent": 40,
+            "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0102",
+            "symptoms": ["Purple-ringed tan spots on leaves (frogeye spots)", "Concentric rings on rotting fruit turning black", "Cankers on limbs with reddish-brown discoloration", "Mummified fruit remaining on tree"],
+            "environmental_factors": ["Warm, humid weather (20-30 C)", "Previous season canker infections", "Mechanical wounds on fruit and bark"],
+            "organic_treatment": "Prune and destroy infected branches. Apply copper hydroxide at 2g/L. Remove mummified fruit immediately. Apply Trichoderma viride-based biocontrol agents. Use protective Bordeaux mixture (1%).",
+            "chemical_treatment": "Apply Thiophanate-methyl 70% WP at 1.5g/L or Myclobutanil 10% WP at 0.5g/L. Start at petal fall and repeat every 10 days.",
+            "similar_outbreaks_globally": ["Brazil: Apple rot - Santa Catarina (2022)", "South Africa: Apple black rot - Western Cape (2023)"]
+        },
+        "Apple___Cedar_apple_rust": {
+            "display_name": "Cedar Apple Rust",
+            "pathogen_name": "Gymnosporangium juniperi-virginianae",
+            "pathogen_type": "Fungal",
+            "severity": "MEDIUM",
+            "crop": "Apple",
+            "estimated_yield_impact_percent": 25,
+            "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0103",
+            "symptoms": ["Bright orange-yellow spots on upper leaf surface", "Tube-like structures (aecia) on lower leaf surface", "Defoliation and fruit deformation", "Lesions on fruit and twigs"],
+            "environmental_factors": ["Requires alternate host (Eastern Red Cedar / Juniper)", "Wet spring conditions (15-20 C)", "High humidity during bloom period"],
+            "organic_treatment": "Remove nearby juniper/cedar hosts. Apply sulfur spray (80% WP at 3g/L) from bud break through petal fall. Use copper-based fungicides protectively.",
+            "chemical_treatment": "Apply Myclobutanil 10% WP at 0.5g/L or Propiconazole 25% EC at 0.75 mL/L. Apply at pink bud stage, petal fall, and 10 days after.",
+            "similar_outbreaks_globally": ["USA: Cedar apple rust - Virginia and Carolina states (2023)"]
+        },
+        "Apple___healthy": {
+            "display_name": "Healthy Apple",
+            "pathogen_name": "None", "pathogen_type": "None", "severity": "NONE", "crop": "Apple",
+            "estimated_yield_impact_percent": 0, "brics_agrin_pattern_match_id": None,
+            "symptoms": ["No visible disease symptoms detected", "Leaves appear green, glossy, and intact"],
+            "environmental_factors": [],
+            "organic_treatment": "Continue current IPM practices. Apply balanced NPK fertilizer. Prune annually for sunlight penetration.",
+            "chemical_treatment": "No treatment required.", "similar_outbreaks_globally": []
+        },
+        "Blueberry___healthy": {
+            "display_name": "Healthy Blueberry",
+            "pathogen_name": "None", "pathogen_type": "None", "severity": "NONE", "crop": "Blueberry",
+            "estimated_yield_impact_percent": 0, "brics_agrin_pattern_match_id": None,
+            "symptoms": ["No disease symptoms detected"], "environmental_factors": [],
+            "organic_treatment": "Maintain acidic soil pH (4.5-5.5). Apply mulch to retain moisture and suppress weeds.",
+            "chemical_treatment": "No treatment required.", "similar_outbreaks_globally": []
+        },
+        "Cherry_(including_sour)___Powdery_mildew": {
+            "display_name": "Cherry Powdery Mildew",
+            "pathogen_name": "Podosphaera clandestina", "pathogen_type": "Fungal", "severity": "MEDIUM", "crop": "Cherry",
+            "estimated_yield_impact_percent": 25, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0201",
+            "symptoms": ["White powdery mycelial growth on leaf surface", "Leaves curl inward (cupping) and turn white", "Deformed, stunted young shoots", "Fruit scarring and reduced size"],
+            "environmental_factors": ["Warm dry days with cool nights", "High relative humidity at night", "Dense canopy with poor air circulation"],
+            "organic_treatment": "Apply potassium bicarbonate (5g/L) or neem oil (5 mL/L with emulsifier). Remove infected shoots. Use Trichoderma harzianum spray.",
+            "chemical_treatment": "Apply Wettable Sulfur 80% WP at 2.5g/L or Hexaconazole 5% EC at 1 mL/L. Spray at 10-day intervals. Do not apply sulfur when temperature exceeds 32 C.",
+            "similar_outbreaks_globally": ["China: Sweet cherry mildew - Dalian (2023)"]
+        },
+        "Cherry_(including_sour)___healthy": {
+            "display_name": "Healthy Cherry",
+            "pathogen_name": "None", "pathogen_type": "None", "severity": "NONE", "crop": "Cherry",
+            "estimated_yield_impact_percent": 0, "brics_agrin_pattern_match_id": None,
+            "symptoms": ["No disease symptoms detected"], "environmental_factors": [],
+            "organic_treatment": "Maintain regular pruning. Apply calcium foliar sprays to strengthen cell walls.",
+            "chemical_treatment": "No treatment required.", "similar_outbreaks_globally": []
+        },
+        "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": {
+            "display_name": "Corn Gray Leaf Spot",
+            "pathogen_name": "Cercospora zeae-maydis", "pathogen_type": "Fungal", "severity": "HIGH", "crop": "Corn / Maize",
+            "estimated_yield_impact_percent": 35, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0301",
+            "symptoms": ["Long rectangular gray-tan lesions parallel to leaf veins", "Distinct parallel margins on lesions", "Premature senescence of lower leaves", "Entire plant defoliation in severe cases"],
+            "environmental_factors": ["High humidity (>90%)", "Warm temperatures (25-30 C)", "Minimum tillage systems with corn residue on field"],
+            "organic_treatment": "Use resistant hybrid varieties. Rotate crops (avoid continuous corn). Incorporate crop residues by deep tillage. Apply Pseudomonas fluorescens bio-fungicide at 5g/L.",
+            "chemical_treatment": "Apply Propiconazole 25% EC at 1 mL/L or Azoxystrobin 23% SC at 1 mL/L. Start at VT (tasseling) stage. Repeat once at silking if conditions persist.",
+            "similar_outbreaks_globally": ["Brazil: Corn GLS outbreak - Mato Grosso (2023)", "South Africa: Maize gray leaf spot - Mpumalanga (2022)"]
+        },
+        "Corn_(maize)___Common_rust_": {
+            "display_name": "Corn Common Rust",
+            "pathogen_name": "Puccinia sorghi", "pathogen_type": "Fungal", "severity": "MEDIUM", "crop": "Corn / Maize",
+            "estimated_yield_impact_percent": 20, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0302",
+            "symptoms": ["Cinnamon-brown oval pustules on both leaf surfaces", "Pustules rupture releasing brick-red to brown spores", "Heavy infection leads to leaf yellowing and premature death"],
+            "environmental_factors": ["Cool temperatures (16-23 C)", "High relative humidity", "Wind-dispersal of spores from alternate host regions"],
+            "organic_treatment": "Plant resistant hybrid varieties. Apply neem-based fungicide (1.5%) at early pustule stage. Apply silica-based foliar to strengthen leaf cuticle.",
+            "chemical_treatment": "Apply Mancozeb 75% WP at 2.5g/L or Tebuconazole 25.9% EC at 1 mL/L. Spray at first sign of pustules. Repeat every 14 days if needed.",
+            "similar_outbreaks_globally": ["India: Corn rust - Himachal Pradesh hills (2023)", "China: Maize rust - Yunnan province (2022)"]
+        },
+        "Corn_(maize)___Northern_Leaf_Blight": {
+            "display_name": "Northern Corn Leaf Blight",
+            "pathogen_name": "Exserohilum turcicum", "pathogen_type": "Fungal", "severity": "HIGH", "crop": "Corn / Maize",
+            "estimated_yield_impact_percent": 30, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0303",
+            "symptoms": ["Long (5-15 cm) cigar-shaped grayish-green lesions", "Lesions turn tan-brown as they mature", "Olive-green spore masses visible under humid conditions", "Whole leaf killed in severe infections"],
+            "environmental_factors": ["Moderate temperatures (18-27 C)", "Extended periods of leaf wetness", "Dense crop canopies"],
+            "organic_treatment": "Use resistant varieties. Crop rotation with non-host crops (soybean, wheat). Deep plowing to bury infected residue. Apply Bacillus subtilis-based bioagent at 5g/L.",
+            "chemical_treatment": "Apply Propiconazole 25% EC at 0.75 mL/L or Azoxystrobin + Propiconazole at label rate. Apply at early tassel stage. Repeat after 14 days.",
+            "similar_outbreaks_globally": ["India: NCLB in Punjab - Kharif season (2022)", "Brazil: Northern blight in corn belt (2023)"]
+        },
+        "Corn_(maize)___healthy": {
+            "display_name": "Healthy Corn / Maize",
+            "pathogen_name": "None", "pathogen_type": "None", "severity": "NONE", "crop": "Corn / Maize",
+            "estimated_yield_impact_percent": 0, "brics_agrin_pattern_match_id": None,
+            "symptoms": ["No disease symptoms detected"], "environmental_factors": [],
+            "organic_treatment": "Continue with integrated nutrient management. Ensure balanced N-P-K fertilization. Practice recommended plant density.",
+            "chemical_treatment": "No treatment required.", "similar_outbreaks_globally": []
+        },
+        "Grape___Black_rot": {
+            "display_name": "Grape Black Rot",
+            "pathogen_name": "Guignardia bidwellii", "pathogen_type": "Fungal", "severity": "CRITICAL", "crop": "Grape",
+            "estimated_yield_impact_percent": 80, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0401",
+            "symptoms": ["Small tan spots with dark borders on leaves", "Black, shriveled mummified berries", "Dark lesions on shoots and tendrils", "Berries shrivel entirely before harvest"],
+            "environmental_factors": ["Warm, wet weather (24-29 C)", "Rainfall during early season fruit development", "Infected mummified berries left from previous season"],
+            "organic_treatment": "Remove mummified berries and infected debris. Apply copper hydroxide (50% WP at 2g/L) protectively. Spray lime-sulfur during dormancy. Improve canopy airflow by pruning.",
+            "chemical_treatment": "Apply Myclobutanil 10% WP at 0.5g/L or Mancozeb 75% WP at 2.5g/L from early shoot growth. Spray every 7-10 days during wet periods.",
+            "similar_outbreaks_globally": ["South Africa: Grape black rot - Stellenbosch (2022)", "China: Grape rot - Xinjiang vineyards (2023)"]
+        },
+        "Grape___Esca_(Black_Measles)": {
+            "display_name": "Grape Esca (Black Measles)",
+            "pathogen_name": "Phaeomoniella chlamydospora / Phaeoacremonium minimum", "pathogen_type": "Fungal", "severity": "CRITICAL", "crop": "Grape",
+            "estimated_yield_impact_percent": 70, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0402",
+            "symptoms": ["Tiger-striped leaf discoloration (interveinal chlorosis)", "Small dark-colored berries - the measles symptom", "Internal wood darkening in cross-section", "Sudden wilting of entire shoot (apoplexy)"],
+            "environmental_factors": ["Pruning wounds in wet weather (primary infection)", "Old vine stress (>15 year old vines more susceptible)", "Drought or waterlogging stress conditions"],
+            "organic_treatment": "Protect pruning wounds with Trichoderma paste. Avoid pruning during wet weather. Remove severely infected vines. Apply Bacillus amyloliquefaciens foliar spray.",
+            "chemical_treatment": "No curative fungicide exists. Apply Boscalid + Pyraclostrobin at pruning to protect wounds. Focus on wound protection and sanitation.",
+            "similar_outbreaks_globally": ["Spain: Esca trunk disease (2022)", "South Africa: Vineyard trunk disease - Paarl (2023)"]
+        },
+        "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)": {
+            "display_name": "Grape Leaf Blight (Isariopsis Leaf Spot)",
+            "pathogen_name": "Isariopsis clavispora", "pathogen_type": "Fungal", "severity": "MEDIUM", "crop": "Grape",
+            "estimated_yield_impact_percent": 30, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0403",
+            "symptoms": ["Dark brown irregular angular lesions on leaves", "Grayish-white sporulation on lesion underside", "Leaf curling and premature drop", "Reduced photosynthesis and weakened vine"],
+            "environmental_factors": ["High humidity and frequent rainfall", "Warm temperatures (20-28 C)", "Poor vineyard ventilation"],
+            "organic_treatment": "Remove and destroy infected leaves. Apply copper oxychloride (50% WP at 3g/L) every 10-14 days. Improve canopy management and air circulation.",
+            "chemical_treatment": "Apply Carbendazim 50% WP at 1g/L or Thiophanate-methyl 70% WP at 1.5g/L every 10-14 days.",
+            "similar_outbreaks_globally": ["India: Grape leaf blight - Nashik, Maharashtra (2022)"]
+        },
+        "Grape___healthy": {
+            "display_name": "Healthy Grape",
+            "pathogen_name": "None", "pathogen_type": "None", "severity": "NONE", "crop": "Grape",
+            "estimated_yield_impact_percent": 0, "brics_agrin_pattern_match_id": None,
+            "symptoms": ["No disease symptoms detected"], "environmental_factors": [],
+            "organic_treatment": "Maintain proper canopy management. Apply compost and vermicompost. Ensure balanced irrigation.",
+            "chemical_treatment": "No treatment required.", "similar_outbreaks_globally": []
+        },
+        "Orange___Haunglongbing_(Citrus_greening)": {
+            "display_name": "Citrus Greening (Huanglongbing / HLB)",
+            "pathogen_name": "Candidatus Liberibacter asiaticus", "pathogen_type": "Bacterial", "severity": "CRITICAL", "crop": "Orange / Citrus",
+            "estimated_yield_impact_percent": 100, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0501",
+            "symptoms": ["Asymmetric (blotchy) mottled yellow leaves", "Stunted growth, twig die-back, sparse foliage", "Small, lopsided fruit remaining partially green", "Bitter, salty, non-marketable fruit"],
+            "environmental_factors": ["Spread by Asian citrus psyllid (Diaphorina citri) vector", "No immunity in any commercially grown citrus variety", "Once infected, tree decline is irreversible"],
+            "organic_treatment": "There is NO cure. Remove and destroy infected trees immediately to prevent spread. Control psyllid vector using neem oil spray (5 mL/L). Introduce Tamarixia radiata parasitic wasp for biological vector control.",
+            "chemical_treatment": "Control psyllid vector with Imidacloprid 17.8% SL at 0.3 mL/L. Quarantine infected areas strictly. Plant only certified disease-free nursery stock.",
+            "similar_outbreaks_globally": ["Brazil: HLB destroyed 100M trees - Sao Paulo state (ongoing)", "China: Citrus greening - Guangdong, Fujian (2022)", "India: Citrus decline - Vidarbha, Maharashtra (2023)"]
+        },
+        "Peach___Bacterial_spot": {
+            "display_name": "Peach Bacterial Spot",
+            "pathogen_name": "Xanthomonas arboricola pv. pruni", "pathogen_type": "Bacterial", "severity": "HIGH", "crop": "Peach",
+            "estimated_yield_impact_percent": 40, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0601",
+            "symptoms": ["Small water-soaked spots on leaves turning brown with yellow halos", "Irregular shot-holes as necrotic tissue falls out", "Sunken, cracked lesions on fruit surface", "Severe defoliation by mid-season"],
+            "environmental_factors": ["Warm, rainy weather during shoot growth", "Sandy, light-textured soils", "High nitrogen applications promoting succulent tissue"],
+            "organic_treatment": "Apply copper hydroxide (53.8% at 2g/L) from shuck fall at 10-14 day intervals. Avoid overhead irrigation. Plant in well-drained soils.",
+            "chemical_treatment": "Apply Oxytetracycline (Mycoshield) at 0.4g/L if registered. Tank-mix copper + Mancozeb for broader protection. Apply 4-6 sprays from petal fall through late season.",
+            "similar_outbreaks_globally": ["China: Peach bacterial spot - Shandong province (2022)"]
+        },
+        "Peach___healthy": {
+            "display_name": "Healthy Peach",
+            "pathogen_name": "None", "pathogen_type": "None", "severity": "NONE", "crop": "Peach",
+            "estimated_yield_impact_percent": 0, "brics_agrin_pattern_match_id": None,
+            "symptoms": ["No disease symptoms detected"], "environmental_factors": [],
+            "organic_treatment": "Apply balanced organic fertilizer. Prune to maintain open center canopy structure.",
+            "chemical_treatment": "No treatment required.", "similar_outbreaks_globally": []
+        },
+        "Pepper,_bell___Bacterial_spot": {
+            "display_name": "Bell Pepper Bacterial Spot",
+            "pathogen_name": "Xanthomonas campestris pv. vesicatoria", "pathogen_type": "Bacterial", "severity": "HIGH", "crop": "Bell Pepper / Capsicum",
+            "estimated_yield_impact_percent": 45, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0701",
+            "symptoms": ["Small water-soaked circular spots on leaves becoming brown", "Yellow halos surrounding leaf spots", "Raised, scabby lesions on fruit surface", "Defoliation leaving fruits exposed to sunscald"],
+            "environmental_factors": ["Warm temperatures (24-30 C) with frequent rainfall", "High relative humidity", "Windblown rain driving bacteria into stomata"],
+            "organic_treatment": "Apply copper hydroxide (50% WP at 2g/L) from transplant stage every 7-10 days. Use pathogen-free certified seed. Apply Pseudomonas fluorescens at 5g/L as biocontrol.",
+            "chemical_treatment": "Apply copper-mancozeb combination. Streptocycline (100 ppm) + copper oxychloride (0.3%) spray for bacterial control.",
+            "similar_outbreaks_globally": ["India: Capsicum bacterial spot - Himachal Pradesh (2022)", "China: Bell pepper disease - Shandong (2023)"]
+        },
+        "Pepper,_bell___healthy": {
+            "display_name": "Healthy Bell Pepper",
+            "pathogen_name": "None", "pathogen_type": "None", "severity": "NONE", "crop": "Bell Pepper / Capsicum",
+            "estimated_yield_impact_percent": 0, "brics_agrin_pattern_match_id": None,
+            "symptoms": ["No disease symptoms detected"], "environmental_factors": [],
+            "organic_treatment": "Apply vermicompost and balanced fertilizer. Maintain proper plant spacing for air circulation.",
+            "chemical_treatment": "No treatment required.", "similar_outbreaks_globally": []
+        },
+        "Potato___Early_blight": {
+            "display_name": "Potato Early Blight",
+            "pathogen_name": "Alternaria solani", "pathogen_type": "Fungal", "severity": "MEDIUM", "crop": "Potato",
+            "estimated_yield_impact_percent": 25, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0801",
+            "symptoms": ["Dark brown circular spots with concentric ring patterns (bullseye)", "Yellow halo surrounding lesions", "Begins on older/lower leaves and progresses upward", "Premature defoliation reducing photosynthesis"],
+            "environmental_factors": ["Warm temperatures (24-29 C)", "Alternating wet and dry periods", "Stress conditions (drought, nutrient deficiency)"],
+            "organic_treatment": "Apply copper oxychloride (50% WP at 3g/L) every 7-10 days. Remove infected lower leaves. Apply neem oil (3%) + garlic extract foliar. Ensure adequate potassium nutrition.",
+            "chemical_treatment": "Apply Mancozeb 75% WP at 2.5g/L or Chlorothalonil 75% WP at 2g/L. Alternate with Iprodione 50% WP at 2g/L to prevent resistance.",
+            "similar_outbreaks_globally": ["India: Potato early blight - UP and Bihar (2022)", "China: Potato blight - Inner Mongolia (2023)"]
+        },
+        "Potato___Late_blight": {
+            "display_name": "Potato Late Blight",
+            "pathogen_name": "Phytophthora infestans", "pathogen_type": "Oomycete (Water Mould)", "severity": "CRITICAL", "crop": "Potato",
+            "estimated_yield_impact_percent": 50, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0802",
+            "symptoms": ["Dark brown water-soaked lesions on leaf margins", "White cottony fungal sporulation on leaf underside in humid conditions", "Rapid lesion expansion - entire leaf can die within days", "Stem necrosis at soil line and brown rot of tubers"],
+            "environmental_factors": ["Cool, wet weather (10-22 C)", "High relative humidity (>90%)", "Heavy rainfall or extended foggy conditions", "Dense crop canopy preventing leaf drying"],
+            "organic_treatment": "Apply Bordeaux mixture (1%) every 5-7 days during cool, wet weather. Copper hydroxide at 2g/L as protective spray. Avoid overhead irrigation. Use resistant varieties (Kufri Jyoti, Kufri Khyati).",
+            "chemical_treatment": "Apply Metalaxyl + Mancozeb (Ridomil Gold MZ) at 2g/L. Alternate with Cymoxanil + Mancozeb (Curzate) at 2.5g/L every 5-7 days.",
+            "similar_outbreaks_globally": ["India: Late blight - Punjab, Haryana (2022)", "Brazil: Batata late blight - Minas Gerais (2023)", "South Africa: Potato blight - Limpopo (2022)"]
+        },
+        "Potato___healthy": {
+            "display_name": "Healthy Potato",
+            "pathogen_name": "None", "pathogen_type": "None", "severity": "NONE", "crop": "Potato",
+            "estimated_yield_impact_percent": 0, "brics_agrin_pattern_match_id": None,
+            "symptoms": ["No disease symptoms detected"], "environmental_factors": [],
+            "organic_treatment": "Maintain earthing-up practice. Apply balanced fertilizer with adequate potassium. Use certified disease-free seed tubers.",
+            "chemical_treatment": "No treatment required. Apply preventive copper spray as precaution during humid seasons.",
+            "similar_outbreaks_globally": []
+        },
+        "Raspberry___healthy": {
+            "display_name": "Healthy Raspberry",
+            "pathogen_name": "None", "pathogen_type": "None", "severity": "NONE", "crop": "Raspberry",
+            "estimated_yield_impact_percent": 0, "brics_agrin_pattern_match_id": None,
+            "symptoms": ["No disease symptoms detected"], "environmental_factors": [],
+            "organic_treatment": "Apply compost mulch. Prune old floricanes after harvest.",
+            "chemical_treatment": "No treatment required.", "similar_outbreaks_globally": []
+        },
+        "Soybean___healthy": {
+            "display_name": "Healthy Soybean",
+            "pathogen_name": "None", "pathogen_type": "None", "severity": "NONE", "crop": "Soybean",
+            "estimated_yield_impact_percent": 0, "brics_agrin_pattern_match_id": None,
+            "symptoms": ["No disease symptoms detected"], "environmental_factors": [],
+            "organic_treatment": "Apply Rhizobium inoculant for nitrogen fixation. Maintain proper plant spacing and crop rotation.",
+            "chemical_treatment": "No treatment required.", "similar_outbreaks_globally": []
+        },
+        "Squash___Powdery_mildew": {
+            "display_name": "Squash Powdery Mildew",
+            "pathogen_name": "Podosphaera xanthii / Erysiphe cichoracearum", "pathogen_type": "Fungal", "severity": "MEDIUM", "crop": "Squash / Cucurbit",
+            "estimated_yield_impact_percent": 30, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-0901",
+            "symptoms": ["White powdery spots on upper and lower leaf surfaces", "Leaves turn entirely white in severe infection", "Yellowing and premature senescence of leaves", "Stunted fruit development"],
+            "environmental_factors": ["Warm dry days, cool nights, high relative humidity at night", "Dense planting, poor air circulation", "Water stress accelerates severity"],
+            "organic_treatment": "Spray baking soda solution (sodium bicarbonate 5g/L + vegetable oil 5 mL/L). Apply milk spray (10% whole milk dilution). Use neem oil (3%) + wetting agent. Ensure adequate plant spacing.",
+            "chemical_treatment": "Apply Wettable Sulfur 80% WP at 2.5g/L or Triadimefon 25% WP at 0.5g/L. Spray every 7-10 days. Do not apply sulfur when temperature exceeds 32 C.",
+            "similar_outbreaks_globally": ["India: Cucurbit powdery mildew - Rajasthan (2022)"]
+        },
+        "Strawberry___Leaf_scorch": {
+            "display_name": "Strawberry Leaf Scorch",
+            "pathogen_name": "Diplocarpon earlianum", "pathogen_type": "Fungal", "severity": "MEDIUM", "crop": "Strawberry",
+            "estimated_yield_impact_percent": 25, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-1001",
+            "symptoms": ["Small, irregular purple spots on leaf surface", "Centers of spots turn brown/gray, edges remain purple", "Severe infection leads to leaf scorch appearance", "Defoliation and plant stunting"],
+            "environmental_factors": ["High humidity, frequent rains", "Dense plant population", "Overhead irrigation practices"],
+            "organic_treatment": "Remove infected leaves before renovation. Apply neem-based fungicide (3%). Use drip irrigation instead of overhead irrigation. Plant disease-resistant varieties.",
+            "chemical_treatment": "Apply Captan 50% WP at 2g/L or Myclobutanil 10% WP at 0.5g/L every 10 days. Start at early spring growth resumption.",
+            "similar_outbreaks_globally": []
+        },
+        "Strawberry___healthy": {
+            "display_name": "Healthy Strawberry",
+            "pathogen_name": "None", "pathogen_type": "None", "severity": "NONE", "crop": "Strawberry",
+            "estimated_yield_impact_percent": 0, "brics_agrin_pattern_match_id": None,
+            "symptoms": ["No disease symptoms detected"], "environmental_factors": [],
+            "organic_treatment": "Apply compost mulch. Remove old leaves regularly. Use drip irrigation.",
+            "chemical_treatment": "No treatment required.", "similar_outbreaks_globally": []
+        },
+        "Tomato___Bacterial_spot": {
+            "display_name": "Tomato Bacterial Spot",
+            "pathogen_name": "Xanthomonas vesicatoria", "pathogen_type": "Bacterial", "severity": "HIGH", "crop": "Tomato",
+            "estimated_yield_impact_percent": 40, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-1101",
+            "symptoms": ["Small dark brown water-soaked lesions with yellow halos on leaves", "Irregular raised scabby spots on fruit surface", "Defoliation leaving fruit exposed to sunscald", "Blighted appearance of young seedlings"],
+            "environmental_factors": ["Warm, wet and windy weather (24-30 C)", "High humidity with frequent rain", "Infected transplants or infected seed lots"],
+            "organic_treatment": "Apply copper hydroxide (53.8% WP at 2g/L) every 5-7 days. Use certified pathogen-free seed. Avoid working in field when plants are wet. Apply Pseudomonas fluorescens (5g/L) as biocontrol.",
+            "chemical_treatment": "Apply Streptocycline (100 ppm) + Copper oxychloride (0.3%). Alternate with Kasugamycin 3% SL at 1.5 mL/L. Spray from early plant growth through fruiting stage.",
+            "similar_outbreaks_globally": ["India: Tomato bacterial spot - Karnataka and AP (2022)", "Brazil: Tomato spot - Goias state (2023)"]
+        },
+        "Tomato___Early_blight": {
+            "display_name": "Tomato Early Blight",
+            "pathogen_name": "Alternaria solani", "pathogen_type": "Fungal", "severity": "MEDIUM", "crop": "Tomato",
+            "estimated_yield_impact_percent": 30, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-1102",
+            "symptoms": ["Dark brown circular spots with concentric ring bullseye pattern", "Yellow chlorotic halo around lesions", "Starts on older lower leaves moving upward", "Fruit stem-end rot - dark leathery lesion at calyx end"],
+            "environmental_factors": ["Warm temperatures (24-29 C)", "Alternating wet and dry periods", "Nutritional stress (nitrogen and potassium deficiency)"],
+            "organic_treatment": "Apply copper oxychloride (50% WP at 3g/L) or Bordeaux mixture (1%) every 7-10 days. Remove lower infected leaves. Apply neem oil spray (3%). Ensure adequate fertilization especially potassium.",
+            "chemical_treatment": "Apply Mancozeb 75% WP at 2.5g/L or Chlorothalonil 75% WP at 2g/L. Alternate with Difenconazole 25% EC at 0.5 mL/L to manage resistance.",
+            "similar_outbreaks_globally": ["India: Tomato early blight - Himachal Pradesh (2022)", "China: Tomato alternaria blight - Shandong (2023)"]
+        },
+        "Tomato___Late_blight": {
+            "display_name": "Tomato Late Blight",
+            "pathogen_name": "Phytophthora infestans", "pathogen_type": "Oomycete (Water Mould)", "severity": "CRITICAL", "crop": "Tomato",
+            "estimated_yield_impact_percent": 60, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-1103",
+            "symptoms": ["Dark brown water-soaked lesions expanding rapidly on leaf margins", "White fuzzy sporulation visible on lower leaf surface in humid conditions", "Brown-black firm lesions on green fruit", "Stem necrosis - dark brown streaking on stems"],
+            "environmental_factors": ["Cool, wet weather (10-20 C) with high humidity (>90%)", "Extended periods of rain, fog, or heavy dew", "Dense plant canopy with poor air circulation"],
+            "organic_treatment": "Apply Bordeaux mixture (1%) every 5-7 days during cool, wet weather. Copper hydroxide at 2g/L spray. Remove infected plant material immediately. Improve air circulation by staking. Avoid wet-season overhead irrigation.",
+            "chemical_treatment": "Apply Metalaxyl + Mancozeb (Ridomil Gold) at 2g/L every 7 days. Alternate with Cymoxanil 8% + Mancozeb 64% WP at 2.5g/L. In resistant strains use Ametoctradin + Dimethomorph.",
+            "similar_outbreaks_globally": ["India: Tomato blight - Himachal Pradesh, Nilgiris (2022)", "Brazil: Late blight - Minas Gerais (2023)", "South Africa: Tomato blight - Limpopo (2022)"]
+        },
+        "Tomato___Leaf_Mold": {
+            "display_name": "Tomato Leaf Mold",
+            "pathogen_name": "Fulvia fulva (Cladosporium fulvum)", "pathogen_type": "Fungal", "severity": "MEDIUM", "crop": "Tomato",
+            "estimated_yield_impact_percent": 25, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-1104",
+            "symptoms": ["Pale yellowish-green spots on upper leaf surface", "Olive-green to brown velvety mold growth on leaf underside", "Leaves turn brown and dry in advanced stages", "Primarily occurs in greenhouse / protected cultivation"],
+            "environmental_factors": ["Very high humidity (>85%) - especially in greenhouses", "Warm temperatures (22-25 C)", "Poor ventilation in protected cultivation"],
+            "organic_treatment": "Increase greenhouse ventilation immediately. Reduce humidity by improving air circulation. Apply potassium bicarbonate spray (5g/L). Remove heavily infected leaves. Avoid wetting foliage during irrigation.",
+            "chemical_treatment": "Apply Chlorothalonil 75% WP at 2g/L or Difenconazole 25% EC at 0.5 mL/L. Spray every 7-10 days. Rotate fungicide classes to prevent resistance.",
+            "similar_outbreaks_globally": ["India: Greenhouse tomato leaf mold - Pune, Maharashtra (2023)"]
+        },
+        "Tomato___Septoria_leaf_spot": {
+            "display_name": "Tomato Septoria Leaf Spot",
+            "pathogen_name": "Septoria lycopersici", "pathogen_type": "Fungal", "severity": "MEDIUM", "crop": "Tomato",
+            "estimated_yield_impact_percent": 25, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-1105",
+            "symptoms": ["Small circular spots (1-4 mm) with dark brown margins and tan/gray centers", "Tiny black specks (pycnidia) visible in center of spots", "Begins on lower/older leaves moving upward", "Severe defoliation, no direct fruit infection"],
+            "environmental_factors": ["Warm, wet weather (20-25 C)", "Overhead irrigation or frequent rainfall", "Dense crop canopy"],
+            "organic_treatment": "Remove infected leaves promptly. Apply copper-based fungicide (copper hydroxide 50% at 2g/L) every 7-10 days. Avoid overhead watering. Apply organic mulch to prevent soil splash.",
+            "chemical_treatment": "Apply Mancozeb 75% WP at 2.5g/L or Chlorothalonil 75% WP at 2g/L. Start at first symptom appearance and spray every 7-10 days.",
+            "similar_outbreaks_globally": ["India: Tomato septoria - Kolar, Karnataka (2022)"]
+        },
+        "Tomato___Spider_mites Two-spotted_spider_mite": {
+            "display_name": "Tomato Spider Mites (Two-Spotted)",
+            "pathogen_name": "Tetranychus urticae", "pathogen_type": "Pest (Arachnid)", "severity": "HIGH", "crop": "Tomato",
+            "estimated_yield_impact_percent": 35, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-1106",
+            "symptoms": ["Tiny yellow or white stippling dots on upper leaf surface", "Bronzing and russeting of leaves in severe infestation", "Fine silk webbing on leaves and growing tips", "Leaf curl, desiccation, and premature drop"],
+            "environmental_factors": ["Hot and dry conditions (>30 C, low humidity)", "Drought stress on plants", "Excessive nitrogen fertilization promoting succulent tissue"],
+            "organic_treatment": "Apply neem oil (5 mL/L with soap) spray on leaf undersides every 5-7 days. Release predatory mites (Phytoseiulus persimilis). Spray cold water jets on undersides to dislodge mites.",
+            "chemical_treatment": "Apply Abamectin 1.9% EC at 0.5 mL/L or Hexythiazox 5% EC at 1 mL/L. Spiromesifen at 0.75 mL/L for resistant populations.",
+            "similar_outbreaks_globally": ["India: Spider mite outbreak - Rajasthan and Gujarat (2022)", "Brazil: Mite infestation - Tomato, Sao Paulo state (2023)"]
+        },
+        "Tomato___Target_Spot": {
+            "display_name": "Tomato Target Spot",
+            "pathogen_name": "Corynespora cassiicola", "pathogen_type": "Fungal", "severity": "MEDIUM", "crop": "Tomato",
+            "estimated_yield_impact_percent": 25, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-1107",
+            "symptoms": ["Brown lesions with distinct concentric ring patterns on leaves", "Yellow halo surrounding lesions", "Lesions on stems, petioles, and fruit surface", "Defoliation in severe infections"],
+            "environmental_factors": ["Warm, humid weather (25-30 C)", "High relative humidity", "Dense crop canopy"],
+            "organic_treatment": "Apply copper hydroxide (50% at 2g/L) every 7-10 days. Remove infected leaves and debris. Improve plant spacing and air circulation.",
+            "chemical_treatment": "Apply Boscalid 50% WG at 0.5g/L or Azoxystrobin 23% SC at 1 mL/L. Alternate with Chlorothalonil 75% WP at 2g/L to prevent resistance.",
+            "similar_outbreaks_globally": ["India: Tomato target spot - Andhra Pradesh (2022)"]
+        },
+        "Tomato___Tomato_Yellow_Leaf_Curl_Virus": {
+            "display_name": "Tomato Yellow Leaf Curl Virus (TYLCV)",
+            "pathogen_name": "Tomato yellow leaf curl virus (Begomovirus)", "pathogen_type": "Viral", "severity": "CRITICAL", "crop": "Tomato",
+            "estimated_yield_impact_percent": 100, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-1108",
+            "symptoms": ["Severe upward curling and cupping of leaves", "Interveinal chlorosis - leaves turn yellow between veins", "Stunted plant growth, greatly reduced plant size", "Total flower and fruit abortion in early infection - zero yield"],
+            "environmental_factors": ["Transmitted by Bemisia tabaci (silverleaf whitefly) vector", "Warm conditions (25-35 C) favor whitefly population explosion", "No cure once plant is infected"],
+            "organic_treatment": "No cure - focus on vector control. Apply neem oil (5 mL/L) + soap spray every 5 days to kill whiteflies. Use yellow sticky traps. Install 40-mesh insect-proof nets over nursery beds. Remove and destroy infected plants immediately.",
+            "chemical_treatment": "Control whitefly vector: Imidacloprid 17.8% SL at 0.3 mL/L as soil drench at transplanting. Spirotetramat at 0.6 mL/L as foliar. Plant TYLCV-resistant hybrids (Arka Rakshak, Pusa Rohini).",
+            "similar_outbreaks_globally": ["India: TYLCV epidemic - Andhra Pradesh, Telangana (2022)", "China: Tomato yellow curl - Hainan, Shandong (2023)", "Brazil: TYLCV in Sao Paulo tomato belt (2023)"]
+        },
+        "Tomato___Tomato_mosaic_virus": {
+            "display_name": "Tomato Mosaic Virus (ToMV)",
+            "pathogen_name": "Tomato mosaic virus (Tobamovirus)", "pathogen_type": "Viral", "severity": "HIGH", "crop": "Tomato",
+            "estimated_yield_impact_percent": 50, "brics_agrin_pattern_match_id": "BRICS-PATH-2024-IN-1109",
+            "symptoms": ["Mosaic pattern of light and dark green mottling on leaves", "Leaf distortion, fernleaf, and leaf filiforming", "Internal brown streaking in fruits", "Stunted plant growth and reduced fruit set"],
+            "environmental_factors": ["Mechanically transmitted by contaminated hands, tools, and clothing", "Highly stable virus - persists in dried plant material for years", "Seed transmission possible"],
+            "organic_treatment": "Use certified virus-free seed. Disinfect tools with 10% trisodium phosphate (TSP) or bleach between plants. Remove and destroy infected plants. Wash hands before handling plants.",
+            "chemical_treatment": "No curative chemical available. Preventive: Apply Virus-X plant extract bioprotectant at 2 mL/L. Control aphid and mechanical vectors using Imidacloprid 17.8% SL.",
+            "similar_outbreaks_globally": ["India: Tomato mosaic - Punjab protected cultivation (2022)"]
+        },
+        "Tomato___healthy": {
+            "display_name": "Healthy Tomato",
+            "pathogen_name": "None", "pathogen_type": "None", "severity": "NONE", "crop": "Tomato",
+            "estimated_yield_impact_percent": 0, "brics_agrin_pattern_match_id": None,
+            "symptoms": ["No disease symptoms detected. Leaves are green, flat, and free of spots."],
+            "environmental_factors": [],
+            "organic_treatment": "Maintain regular IPM scouting. Apply balanced NPK fertilizer. Use drip irrigation. Stake plants for proper air circulation.",
+            "chemical_treatment": "No treatment required. Continue preventive copper spray program as calendar-based schedule.",
+            "similar_outbreaks_globally": []
+        }
+    }
+}
+
+out_path = pathlib.Path(__file__).parent / "disease_db.json"
+out_path.write_text(json.dumps(DB, indent=2, ensure_ascii=False), encoding="utf-8")
+print(f"SUCCESS: disease_db.json written to {out_path}")
+print(f"Total disease classes: {len(DB['classes'])}")
