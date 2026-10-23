@@ -10,6 +10,7 @@ Usage:
 
 import io
 import json
+import base64
 import logging
 import time
 import pathlib
@@ -213,23 +214,94 @@ class KisanDrishtiModel:
 
         # ---------- real inference ----------
         try:
+            orig_img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
             tensor = self._preprocess(image_bytes)
             top1_idx, top1_conf, top3 = self._run_inference(tensor)
+            
+            # Generate Explainable AI (Grad-CAM) Visual Heatmap
+            gradcam_data = ""
+            try:
+                gradcam_data = self.generate_gradcam(tensor, orig_img, top1_idx)
+            except Exception as cam_err:
+                logger.warning(f"[KisanDrishti] Grad-CAM generation error: {cam_err}")
+
             elapsed_ms = round((time.perf_counter() - t_start) * 1000, 1)
 
             class_key = CLASS_NAMES[top1_idx]
             db_entry  = self.disease_db.get("classes", {}).get(class_key, {})
 
-            result = self._build_result(class_key, top1_conf, top3, db_entry, elapsed_ms)
+            result = self._build_result(class_key, top1_conf, top3, db_entry, elapsed_ms, gradcam_data)
             logger.info(
                 f"[KisanDrishti] Predicted: {db_entry.get('display_name', class_key)} "
-                f"({top1_conf*100:.1f}%) in {elapsed_ms} ms"
+                f"({top1_conf*100:.1f}%) with Grad-CAM in {elapsed_ms} ms"
             )
             return result
 
         except Exception as exc:
             logger.error(f"[KisanDrishti] Inference error: {exc}")
             raise
+
+    def generate_gradcam(self, tensor: torch.Tensor, original_img: Image.Image, target_class_idx: int) -> str:
+        """
+        Generate Explainable AI Grad-CAM heatmap overlay for the specified class.
+        Returns a base64-encoded JPEG data URL ('data:image/jpeg;base64,...').
+        """
+        if not self.model:
+            return ""
+        self.model.eval()
+        features_layer = self.model.features[-1]
+
+        activations = []
+        gradients = []
+
+        def fh(m, i, o): activations.append(o)
+        def bh(m, gi, go): gradients.append(go[0])
+
+        f_handle = features_layer.register_forward_hook(fh)
+        b_handle = features_layer.register_full_backward_hook(bh)
+
+        t_grad = tensor.clone().detach().requires_grad_(True)
+        logits = self.model(t_grad)
+        score = logits[0, target_class_idx]
+
+        self.model.zero_grad()
+        score.backward()
+
+        f_handle.remove()
+        b_handle.remove()
+
+        if not activations or not gradients:
+            return ""
+
+        import numpy as np
+        acts = activations[0].detach()
+        grads = gradients[0].detach()
+
+        weights = grads.mean(dim=(2, 3), keepdim=True)
+        cam = torch.relu((weights * acts).sum(dim=1, keepdim=True))
+        cam = torch.nn.functional.interpolate(cam, size=(224, 224), mode='bilinear', align_corners=False)
+        cam = cam.squeeze().cpu().numpy()
+
+        cam_min, cam_max = cam.min(), cam.max()
+        if cam_max > cam_min:
+            cam = (cam - cam_min) / (cam_max - cam_min)
+        else:
+            cam = np.zeros_like(cam)
+
+        # Generate jet heatmap (blue -> cyan -> yellow -> red)
+        h = np.uint8(255 * cam)
+        r = np.clip(1.5 * h, 0, 255).astype(np.uint8)
+        g = np.clip(255 - np.abs(h - 128) * 2, 0, 255).astype(np.uint8)
+        b = np.clip(255 - 1.5 * h, 0, 255).astype(np.uint8)
+        heat_rgb = np.stack([r, g, b], axis=-1)
+
+        heat_img = Image.fromarray(heat_rgb).resize(original_img.size)
+        blended = Image.blend(original_img.convert("RGB"), heat_img, alpha=0.45)
+
+        buf = io.BytesIO()
+        blended.save(buf, format="JPEG", quality=85)
+        b64_str = base64.b64encode(buf.getvalue()).decode("utf-8")
+        return f"data:image/jpeg;base64,{b64_str}"
 
     def _build_result(
         self,
@@ -238,6 +310,7 @@ class KisanDrishtiModel:
         top3: List[Dict],
         db: Dict,
         elapsed_ms: float,
+        gradcam_image: str = "",
     ) -> Dict[str, Any]:
         """Assemble the final API-compatible diagnosis dict."""
         is_healthy = db.get("severity", "NONE") == "NONE"
@@ -262,6 +335,7 @@ class KisanDrishtiModel:
             "inference_latency_ms": elapsed_ms,
             "top3_differential": top3,
             "is_healthy": is_healthy,
+            "gradcam_image": gradcam_image,
         }
 
     @staticmethod
